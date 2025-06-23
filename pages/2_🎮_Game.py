@@ -2,7 +2,7 @@ import streamlit as st
 import random
 from utils.firebase_simple_config import FirebaseSimpleManager
 from utils.audio_service import play_audio_button, create_content_with_audio
-from utils.firebase_auth import init_auth_session, is_authenticated, get_current_user, logout_user
+from utils.firebase_auth import init_auth_session, is_authenticated, get_current_user, logout_user, current_user
 
 # Page configuration
 st.set_page_config(
@@ -177,15 +177,9 @@ def submit_answer(selected_choice):
 
 def main():
     st.title("🎮 Game - Quiz de Vocabulaire")
-    # Add logout button in sidebar
-    with st.sidebar:
-        user = get_current_user()
-        if user:
-            st.markdown("### 👤 Utilisateur connecté")
-            st.markdown(f"**{user['email']}**")
-            if st.button("🚪 Se déconnecter", use_container_width=True):
-                logout_user()
-                st.rerun()
+
+    # display current user info
+    current_user()
     
     # Check if user has enough words
     try:

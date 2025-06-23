@@ -1,8 +1,10 @@
-# VocabMaster - Replit Configuration Guide
+# VocabMaster
 
 ## Overview
 
 VocabMaster is a smart English vocabulary learning app powered by AI. Simply enter any English word or phrase VocabMaster instantly provides clear French translations, definitions, and real-life usage examples. Build your own personal dictionary, play interactive word games, and watch your progress grow with easy-to-read stats. Everything is designed to make learning English simple, engaging, and effective.
+
+![Home UI](/attached_assets/Home_UI.png)
 
 ## System Architecture
 
@@ -38,10 +40,16 @@ VocabMaster is a smart English vocabulary learning app powered by AI. Simply ent
 
 ### Page Components
 
-- **Login** (`pages/0_login.py`): Login page
-- **My Words** (`pages/1_My_Words.py`): Personal dictionary management with search functionality
-- **Game** (`pages/2_Game.py`): Interactive vocabulary quiz with multiple choice questions
-- **Stats** (`pages/3_Stats.py`): Learning progress visualization using Plotly charts
+- ## **Login** (`pages/0_login.py`): Login page.
+
+- **My Words** (`pages/1_My_Words.py`): Personal dictionary management with search functionality.  
+  ![My Words UI](/attached_assets/Words_UI.png)
+
+- **Game** (`pages/2_Game.py`): Interactive vocabulary quiz with multiple choice questions  
+  ![Game UI](/attached_assets/Game_UI.png)
+
+- **Stats** (`pages/3_Stats.py`): Learning progress visualization using Plotly charts  
+  ![Stats UI](/attached_assets/Stats_UI.png)
 
 ### Utility Services
 

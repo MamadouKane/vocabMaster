@@ -100,7 +100,7 @@ if not is_authenticated():
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         if st.button("🔑 Se connecter | S'inscrire", type="primary", use_container_width=True):
-            st.switch_page("pages/0_Login.py")
+            st.switch_page("pages/0_🔐_Login.py")
     
     st.markdown("---")
     # Fonctionnalities 
