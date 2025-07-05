@@ -343,7 +343,7 @@ def main():
             
             # Action buttons
             st.markdown("---")
-            col1, col2, col3 = st.columns(3)
+            col1, col2, col3, col4 = st.columns(4)
             
             with col1:
                 if st.button("🔄 Nouvelle Partie", type="primary", use_container_width=True):
@@ -351,10 +351,22 @@ def main():
                         st.rerun()
             
             with col2:
+                if st.button("🎯 Choix du mode", use_container_width=True):
+                    # Réinitialiser l'état du jeu pour revenir au choix du mode
+                    st.session_state.game_active = False
+                    st.session_state.game_completed = False
+                    st.session_state.current_question = 0
+                    st.session_state.score = 0
+                    st.session_state.quiz_words = []
+                    st.session_state.user_answers = []
+                    st.session_state.game_mode = None
+                    st.rerun()
+
+            with col3:
                 if st.button("📊 Voir Statistiques", use_container_width=True):
                     st.switch_page("pages/3_📊_Stats.py")
 
-            with col3:
+            with col4:
                 if st.button("🏠 Retour Accueil", use_container_width=True):
                     st.switch_page("app.py")
         

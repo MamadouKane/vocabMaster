@@ -42,7 +42,9 @@ def main():
         
         if not words:
             st.info("Aucun mot enregistré pour le moment. Allez sur la page d'accueil pour ajouter des mots!")
-            st.markdown("👉 [Retour à l'accueil](../)")
+            # st.markdown("👉 [Retour à l'accueil](../)")
+            if st.button("🏠 Aller à l'accueil", type="primary"):
+                st.switch_page("app.py")
             return
         
         st.success(f"📊 Total: {len(words)} mots enregistrés")
@@ -143,9 +145,9 @@ def main():
                         content_type="markdown"
                     )
                 
-                # Creation date
-                if word.get('created_at'):
-                    st.markdown(f"**📅 Ajouté le:** {word.get('created_at').strftime('%d/%m/%Y à %H:%M')}")
+                # # Creation date
+                # if word.get('created_at'):
+                #     st.markdown(f"**📅 Ajouté le:** {word.get('created_at').strftime('%d/%m/%Y à %H:%M')}")
         
         # Quick actions
         st.markdown("---")

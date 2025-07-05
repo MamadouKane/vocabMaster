@@ -104,11 +104,11 @@ client = InferenceClient(
 def get_definition_and_examples(word):
     """ Get definition, translation, and examples for an English word using Mistral-Nemo-Instruct-2407
     """
-    # Vérifier si le mot est en anglais
-    if not is_english(word):
-        st.error("Veuillez entrer un mot ou une expression correcte en anglais.")
-        # return create_fallback_response(word)
-        return None
+    # # Vérifier si le mot est en anglais
+    # if not is_english(word):
+    #     st.error("Veuillez entrer un mot ou une expression correcte en anglais.")
+    #     # return create_fallback_response(word)
+    #     return None
         
     # Check if the Hugging Face token is set    
     if not HF_TOKEN:

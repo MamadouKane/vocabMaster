@@ -185,6 +185,7 @@ def init_auth_session():
         st.session_state.refresh_token = None
     if 'username' not in st.session_state:
         st.session_state.username = None
+    # Do not reinitialize if already authenticated
 
 def login_user(user_data):
     """Set user session data after successful login"""

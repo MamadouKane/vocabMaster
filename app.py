@@ -281,7 +281,7 @@ def main():
                         )
                         # Clear current word data
                         del st.session_state.current_word_data
-                        time.sleep(1)
+                        time.sleep(3)
                         st.rerun()
                     else:
                         st.error(
