@@ -1,9 +1,14 @@
 from datetime import datetime
+import os
 import requests
 import uuid
 import streamlit as st
-from .env_loader import FIREBASE_DATABASE_URL
+from dotenv import load_dotenv
 from .firebase_auth import get_current_user
+
+# Load environment variables
+load_dotenv()
+FIREBASE_DATABASE_URL = os.getenv('FIREBASE_DATABASE_URL')
 
 class FirebaseSimpleManager:
     def __init__(self):

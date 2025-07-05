@@ -6,11 +6,15 @@ import streamlit as st
 import requests
 import json
 import time
-from .env_loader import get_env_var
+import os
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # Firebase Auth REST API URLs
 FIREBASE_AUTH_URL = "https://identitytoolkit.googleapis.com/v1/accounts"
-FIREBASE_API_KEY = get_env_var('FIREBASE_API_KEY')
+FIREBASE_API_KEY = os.getenv('FIREBASE_API_KEY')
 
 class FirebaseAuth:
     def __init__(self):

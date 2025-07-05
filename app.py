@@ -1,12 +1,17 @@
 import streamlit as st
 import json
 import os
-from utils.env_loader import APP_NAME, DEBUG_MODE
 from utils.firebase_simple_config import FirebaseSimpleManager
 from utils.ai_service import get_definition_and_examples
 from utils.audio_service import play_audio_button, create_content_with_audio
 from utils.firebase_auth import init_auth_session, is_authenticated, logout_user, get_current_user, current_user
 import time
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+APP_NAME = os.getenv('APP_NAME', 'VocabMaster')
 
 # Page configuration
 st.set_page_config(page_title=APP_NAME,
