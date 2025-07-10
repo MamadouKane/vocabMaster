@@ -80,7 +80,7 @@ VocabMaster is a smart English vocabulary learning app powered by AI. Simply ent
 
 ### API Integrations
 
-- **Hugging Face Inference API**: AI content generation using Zephyr-7B model
+- **Hugging Face Inference API**: AI content generation using Mistral-Nemo-Instruct-2407 model
 - **Firebase Firestore**: Cloud database for user data storage
 - **Google Text-to-Speech**: Audio generation service
 
