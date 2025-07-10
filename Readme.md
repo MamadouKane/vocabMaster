@@ -53,7 +53,7 @@ VocabMaster is a smart English vocabulary learning app powered by AI. Simply ent
 
 ### Utility Services
 
-- **AI Integration**: Uses Hugging Face Zephyr-7B model for generating definitions and examples
+- **AI Integration**: Uses Hugging Face Mistral-Nemo-Instruct-2407 model for generating definitions and examples
 - **Audio Generation**: gTTS for pronunciation support
 - **Database Management**: Firebase Firestore for persistent storage
 
@@ -93,6 +93,8 @@ VocabMaster is a smart English vocabulary learning app powered by AI. Simply ent
 
 ### Platform Configuration
 
-- **Runtime**: Python 3.11 with Nix package management
+- **Runtime**: Python 3.11
 - **Port**: Application runs on port 5000
 - **Command**: `streamlit run app.py --server.port 5000`
+
+### Try the app : [https://eng-vocabmaster.streamlit.app/](https://eng-vocabmaster.streamlit.app/)
