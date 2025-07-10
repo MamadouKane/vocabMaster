@@ -110,8 +110,8 @@ if not is_authenticated():
     st.markdown("---")
     # Fonctionnalities 
     st.markdown("""
-    <div style="text-align:center; margin-bottom: 2rem;">
-        <h2 style="font-weight:700; letter-spacing:1px;">🌟 Fonctionnalités</h2>
+    <div style="text-align:center; margin-bottom: 2rem; color: #111;">
+        <h2 style="font-weight:700; letter-spacing:1px; color: #111;">🌟 Fonctionnalités</h2>
     </div>
     <div style="
         display: flex;
@@ -119,6 +119,7 @@ if not is_authenticated():
         justify-content: center;
         gap: 2rem;
         margin-bottom: 2rem;
+        color: #111;
     ">
         <div class="feature-card" style="
             min-width: 250px;
@@ -126,10 +127,11 @@ if not is_authenticated():
             flex: 1 1 250px;
             box-shadow: 0 4px 15px rgba(102,126,234,0.08);
             border-left: 4px solid #667eea;
+            color: #111;
         ">
-            <h4 style="margin-top:0.5rem;">🤖 IA Avancée</h4>
-            <h6 style="margin-top:0.5rem;">Entrez un mot ou une expression et l'IA se charge du reste :</h6>
-            <ul style="text-align:left; padding-left:1.2em;">
+            <h4 style="margin-top:0.5rem; color: #111;">🤖 IA Avancée</h4>
+            <h6 style="margin-top:0.5rem; color: #111;">Entrez un mot ou une expression et l'IA se charge du reste :</h6>
+            <ul style="text-align:left; padding-left:1.2em; color: #111;">
                 <li>Définitions automatiques</li>
                 <li>Traductions précises</li>
                 <li>Exemples contextuels</li>
@@ -141,9 +143,10 @@ if not is_authenticated():
             flex: 1 1 250px;
             box-shadow: 0 4px 15px rgba(102,126,234,0.08);
             border-left: 4px solid #764ba2;
+            color: #111;
         ">
-            <h4 style="margin-top:0.5rem;">🔊 Audio Intégré</h4>
-            <ul style="text-align:left; padding-left:1.2em;">
+            <h4 style="margin-top:0.5rem; color: #111;">🔊 Audio Intégré</h4>
+            <ul style="text-align:left; padding-left:1.2em; color: #111;">
                 <li>Prononciation de chaque mot</li>
                 <li>Audio pour les exemples</li>
                 <li>Interface intuitive</li>
@@ -155,9 +158,10 @@ if not is_authenticated():
             flex: 1 1 250px;
             box-shadow: 0 4px 15px rgba(102,126,234,0.08);
             border-left: 4px solid #f5576c;
+            color: #111;
         ">
-            <h4 style="margin-top:0.5rem;">🎮 Quiz Interactif</h4>
-            <ul style="text-align:left; padding-left:1.2em;">
+            <h4 style="margin-top:0.5rem; color: #111;">🎮 Quiz Interactif</h4>
+            <ul style="text-align:left; padding-left:1.2em; color: #111;">
                 <li>Deux modes de jeu</li>
                 <li>Statistiques détaillées</li>
                 <li>Suivi des progrès</li>
@@ -198,7 +202,7 @@ def main():
     _ , col2, _ = st.columns([1, 2, 1])
 
     with col2:
-        st.markdown('<div class="input-section">', unsafe_allow_html=True)
+        # st.markdown('<div class="input-section">', unsafe_allow_html=True)
         
         # Word input section with attractive design
         st.markdown("### ✨ Découvrez un nouveau mot")
@@ -217,7 +221,6 @@ def main():
         if validate_btn and word_input.strip():
             with st.spinner("Génération du contenu en cours..."):
                 word_data = get_definition_and_examples(word_input.strip())
-
                 if word_data:
                     st.session_state.current_word_data = word_data
                     st.success("Contenu généré avec succès!")
@@ -245,7 +248,7 @@ def main():
             # French translation (no audio)
             if 'translation' in word_data:
                 st.markdown(f"**Signification (FR):** {word_data['translation']}")
-
+            
             # English definition
             if 'definition' in word_data:
                 create_content_with_audio(
