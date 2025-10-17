@@ -7,4 +7,3 @@ requests>=2.32.4
 streamlit>=1.46.0
 python-dotenv==1.0.0
 huggingface-hub==0.33.2
-langdetect==1.0.9
