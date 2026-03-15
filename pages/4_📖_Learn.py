@@ -136,7 +136,7 @@ def request_ai_suggestions(count=7, level="Any", context="Any"):
     
     try:
         response = client.chat.completions.create(
-            model="mistralai/Mistral-Nemo-Instruct-2407",
+            model="HuggingFaceH4/zephyr-7b-beta",
             messages=[
                 {"role": "system", "content": "You are a helpful English vocabulary teacher. Always respond with valid JSON arrays only, no other text."},
                 {"role": "user", "content": prompt}

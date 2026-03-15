@@ -4,7 +4,7 @@ import requests
 import uuid
 import streamlit as st
 from dotenv import load_dotenv
-from .firebase_auth import get_current_user
+from .firebase_auth import get_current_user, FirebaseAuth
 
 # Load environment variables
 load_dotenv()
@@ -13,6 +13,37 @@ FIREBASE_DATABASE_URL = os.getenv('FIREBASE_DATABASE_URL')
 class FirebaseSimpleManager:
     def __init__(self):
         self.database_url = FIREBASE_DATABASE_URL.rstrip('/')
+        self._auth = FirebaseAuth()
+
+    def _get_token(self):
+        """Return a valid ID token, refreshing it if necessary."""
+        token = st.session_state.get('auth_token')
+        if not token:
+            return None
+
+        # Try a lightweight verify; if it fails, refresh
+        verify = self._auth.verify_token(token)
+        if verify.get('success'):
+            return token
+
+        # Token expired — attempt refresh
+        refresh_tok = st.session_state.get('refresh_token')
+        if not refresh_tok:
+            return None
+
+        result = self._auth.refresh_token(refresh_tok)
+        if result.get('success'):
+            st.session_state.auth_token = result['token']
+            st.session_state.refresh_token = result['refresh_token']
+            return result['token']
+
+        return None
+
+    def _url(self, path):
+        """Build an authenticated Firebase REST URL."""
+        token = self._get_token()
+        auth_param = f"?auth={token}" if token else ""
+        return f"{self.database_url}/{path}.json{auth_param}"
 
     def add_word(self, word_data):
         """Add a new word to the database for the current user"""
@@ -45,8 +76,8 @@ class FirebaseSimpleManager:
                 'user_id': user_id
             }
 
-            # Send POST request to Firebase
-            response = requests.post(f"{self.database_url}/words.json", json=word_doc)
+            # Send POST request to Firebase (authenticated)
+            response = requests.post(self._url("words"), json=word_doc)
 
             if response.status_code == 200:
                 return True
@@ -66,7 +97,7 @@ class FirebaseSimpleManager:
                 st.error("Utilisateur non authentifié.")
                 return []
             user_id = user.get('user_id') or user.get('email')
-            response = requests.get(f"{self.database_url}/words.json")
+            response = requests.get(self._url("words"))
 
             if response.status_code == 200:
                 words_data = response.json() or {}
@@ -114,7 +145,7 @@ class FirebaseSimpleManager:
                 'id': str(uuid.uuid4()),
                 'user_id': user_id
             }
-            response = requests.post(f"{self.database_url}/game_results.json", json=game_doc)
+            response = requests.post(self._url("game_results"), json=game_doc)
             if response.status_code == 200:
                 return True
             else:
@@ -132,7 +163,7 @@ class FirebaseSimpleManager:
                 st.error("Utilisateur non authentifié.")
                 return {'total_games': 0, 'best_score': 0, 'average_score': 0}
             user_id = user.get('user_id') or user.get('email')
-            response = requests.get(f"{self.database_url}/game_results.json")
+            response = requests.get(self._url("game_results"))
             if response.status_code == 200:
                 results_data = response.json() or {}
                 user_results = [r for r in results_data.values() if r.get('user_id') == user_id]

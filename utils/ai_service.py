@@ -28,7 +28,8 @@ def get_definition_and_examples(word):
         {"role": "system", "content": "You are an English assistant."},
         {"role": "user", "content": (
             f'Provide a definition, French translation, and two English example sentences for the word '
-            f'{word}. Format as JSON with keys: word, definition, translation, example1, example2.'
+            f'{word}. The two examples should contain the word in different contexts and always be in English.'
+            f'Format the response as JSON with keys: word, definition, translation, example1, example2.'
         )}
     ]
 
