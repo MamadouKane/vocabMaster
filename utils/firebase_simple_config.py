@@ -1,10 +1,12 @@
 from datetime import datetime
+import json
 import os
+import time
 import requests
 import uuid
 import streamlit as st
 from dotenv import load_dotenv
-from .firebase_auth import get_current_user, FirebaseAuth
+from .firebase_auth import get_current_user, FirebaseAuth, set_token_expiry
 
 # Load environment variables
 load_dotenv()
@@ -21,9 +23,8 @@ class FirebaseSimpleManager:
         if not token:
             return None
 
-        # Try a lightweight verify; if it fails, refresh
-        verify = self._auth.verify_token(token)
-        if verify.get('success'):
+        # Reuse the token until one minute before it expires
+        if time.time() < st.session_state.get('token_expires_at', 0) - 60:
             return token
 
         # Token expired — attempt refresh
@@ -35,6 +36,7 @@ class FirebaseSimpleManager:
         if result.get('success'):
             st.session_state.auth_token = result['token']
             st.session_state.refresh_token = result['refresh_token']
+            set_token_expiry(result.get('expires_in'))
             return result['token']
 
         return None
@@ -44,6 +46,22 @@ class FirebaseSimpleManager:
         token = self._get_token()
         auth_param = f"?auth={token}" if token else ""
         return f"{self.database_url}/{path}.json{auth_param}"
+
+    def _get_user_records(self, path, user_id):
+        """Fetch only the current user's records under `path`.
+
+        Filters server-side with orderBy/equalTo, which requires
+        ".indexOn": ["user_id"] on `path` in the database rules.
+        Falls back to client-side filtering if the index is missing.
+        """
+        params = {'orderBy': '"user_id"', 'equalTo': json.dumps(user_id)}
+        response = requests.get(self._url(path), params=params)
+        if response.status_code == 400 and 'index' in response.text.lower():
+            response = requests.get(self._url(path))
+        if response.status_code != 200:
+            return None, response.status_code
+        records = response.json() or {}
+        return [r for r in records.values() if r.get('user_id') == user_id], 200
 
     def add_word(self, word_data):
         """Add a new word to the database for the current user"""
@@ -97,20 +115,14 @@ class FirebaseSimpleManager:
                 st.error("Utilisateur non authentifié.")
                 return []
             user_id = user.get('user_id') or user.get('email')
-            response = requests.get(self._url("words"))
+            word_list, status = self._get_user_records("words", user_id)
 
-            if response.status_code == 200:
-                words_data = response.json() or {}
-                word_list = []
-                for key, word_data in words_data.items():
-                    # Filtrer par user_id
-                    if word_data.get('user_id') == user_id:
-                        word_list.append(word_data)
+            if word_list is not None:
                 # Sort by creation date (newest first)
                 word_list.sort(key=lambda x: x.get('created_at', ''), reverse=True)
                 return word_list
             else:
-                st.error(f"Erreur lors de la récupération des mots: {response.status_code}")
+                st.error(f"Erreur lors de la récupération des mots: {status}")
                 return []
         except Exception as e:
             st.error(f"Erreur lors de la récupération des mots: {str(e)}")
@@ -163,10 +175,8 @@ class FirebaseSimpleManager:
                 st.error("Utilisateur non authentifié.")
                 return {'total_games': 0, 'best_score': 0, 'average_score': 0}
             user_id = user.get('user_id') or user.get('email')
-            response = requests.get(self._url("game_results"))
-            if response.status_code == 200:
-                results_data = response.json() or {}
-                user_results = [r for r in results_data.values() if r.get('user_id') == user_id]
+            user_results, status = self._get_user_records("game_results", user_id)
+            if user_results is not None:
                 total_games = len(user_results)
                 best_score = max([r.get('percentage', 0) for r in user_results], default=0)
                 average_score = sum([r.get('percentage', 0) for r in user_results]) / total_games if total_games > 0 else 0
@@ -176,7 +186,7 @@ class FirebaseSimpleManager:
                     'average_score': average_score
                 }
             else:
-                st.error(f"Erreur lors de la récupération des statistiques: {response.status_code}")
+                st.error(f"Erreur lors de la récupération des statistiques: {status}")
                 return {'total_games': 0, 'best_score': 0, 'average_score': 0}
         except Exception as e:
             st.error(f"Erreur lors de la récupération des statistiques: {str(e)}")
@@ -206,10 +216,11 @@ class FirebaseSimpleManager:
         except:
             return None
 
-    def get_monthly_progress(self):
+    def get_monthly_progress(self, words=None):
         """Get monthly learning progress for current user"""
         try:
-            words = self.get_all_words()
+            if words is None:
+                words = self.get_all_words()
             monthly_data = {}
             for word_data in words:
                 if 'created_at' in word_data:

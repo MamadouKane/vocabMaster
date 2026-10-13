@@ -43,7 +43,8 @@ class FirebaseAuth:
                     'email': data.get('email'),
                     'username': data.get('displayName'),
                     'token': data.get('idToken'),
-                    'refresh_token': data.get('refreshToken')
+                    'refresh_token': data.get('refreshToken'),
+                    'expires_in': data.get('expiresIn')
                 }
             else:
                 error_message = data.get('error', {}).get('message', 'Erreur inconnue')
@@ -77,7 +78,8 @@ class FirebaseAuth:
                     'username': data.get('displayName'),
                     'email': data.get('email'),
                     'token': data.get('idToken'),
-                    'refresh_token': data.get('refreshToken')
+                    'refresh_token': data.get('refreshToken'),
+                    'expires_in': data.get('expiresIn')
                 }
             else:
                 error_message = data.get('error', {}).get('message', 'Erreur inconnue')
@@ -107,7 +109,8 @@ class FirebaseAuth:
                 return {
                     'success': True,
                     'token': data.get('id_token'),
-                    'refresh_token': data.get('refresh_token')
+                    'refresh_token': data.get('refresh_token'),
+                    'expires_in': data.get('expires_in')
                 }
             else:
                 return {'success': False, 'error': 'Token expired'}
@@ -189,6 +192,8 @@ def init_auth_session():
         st.session_state.refresh_token = None
     if 'username' not in st.session_state:
         st.session_state.username = None
+    if 'token_expires_at' not in st.session_state:
+        st.session_state.token_expires_at = 0
     # Do not reinitialize if already authenticated
 
 def login_user(user_data):
@@ -199,6 +204,15 @@ def login_user(user_data):
     st.session_state.auth_token = user_data.get('token')
     st.session_state.refresh_token = user_data.get('refresh_token')
     st.session_state.username = user_data.get('username')
+    set_token_expiry(user_data.get('expires_in'))
+
+def set_token_expiry(expires_in):
+    """Store when the current ID token expires (Firebase tokens last 3600s)"""
+    try:
+        lifetime = int(expires_in)
+    except (TypeError, ValueError):
+        lifetime = 3600
+    st.session_state.token_expires_at = time.time() + lifetime
 
 def logout_user():
     """Clear user session data"""
@@ -208,6 +222,7 @@ def logout_user():
     st.session_state.auth_token = None
     st.session_state.refresh_token = None
     st.session_state.username = None
+    st.session_state.token_expires_at = 0
 
 def is_authenticated():
     """Check if user is authenticated"""

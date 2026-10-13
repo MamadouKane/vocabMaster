@@ -1,84 +1,81 @@
-import requests
 import json
 import os
-import re
-import streamlit as st
 from dotenv import load_dotenv
-from huggingface_hub import InferenceClient
+from openai import OpenAI
 
 # Load environment variables
 load_dotenv()
-# Ensure the Hugging Face token is set
-HF_TOKEN = os.getenv('HUGGINGFACE_TOKEN', '').strip()   
+# Ensure the OpenAI key is set
+OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '').strip()
+OPENAI_MODEL = os.getenv('OPENAI_MODEL', 'gpt-6-luna').strip()
 
-# Initialize 
-client = InferenceClient(
-    model="HuggingFaceH4/zephyr-7b-beta",
-    api_key=HF_TOKEN  # ou api_key=HF_TOKEN si version plus récente de huggingface_hub
-)
+# Initialize
+client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
+
+
+def _chat_json(system_prompt, user_prompt):
+    """Call the OpenAI model and return its answer parsed as a JSON object"""
+    response = client.chat.completions.create(
+        model=OPENAI_MODEL,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        response_format={"type": "json_object"},
+    )
+    return json.loads(response.choices[0].message.content)
+
 
 def get_definition_and_examples(word):
-    """ Get definition, translation, and examples for an English word using Mistral-Nemo-Instruct-2407
+    """ Get definition, translation, and examples for an English word using OpenAI
     """
-    if not HF_TOKEN:
-        print("Token Hugging Face manquant. Veuillez configurer votre clé API.")
+    if not client:
+        print("Clé OpenAI manquante. Veuillez configurer OPENAI_API_KEY.")
         return create_fallback_response(word)
-    
-    messages = [
-        {"role": "system", "content": "You are an English assistant."},
-        {"role": "user", "content": (
-            f'Provide a definition, French translation, and two English example sentences for the word '
-            f'{word}. The two examples should contain the word in different contexts and always be in English.'
-            f'Format the response as JSON with keys: word, definition, translation, example1, example2.'
-        )}
-    ]
 
     try:
-        response = client.chat.completions.create(
-            model="HuggingFaceH4/zephyr-7b-beta",
-            messages=messages,
-            max_tokens=300,
-            temperature=0.1,
+        data = _chat_json(
+            "You are an English assistant. Always answer with a JSON object only.",
+            f'Provide a definition, French translation, and two English example sentences for the word '
+            f'"{word}". The two examples should contain the word in different contexts and always be in English. '
+            f'Format the response as JSON with keys: word, definition, translation, example1, example2.'
         )
-        text = response.choices[0].message.content
-
-        try:
-            return json.loads(text)
-        except json.JSONDecodeError:
-            return extract_info_manually(text, word)
+        if validate_word_data(data):
+            return {field: str(data[field]).strip() for field in REQUIRED_FIELDS}
+        print(f"Réponse incomplète du modèle : {data}")
+        return create_fallback_response(word)
 
     except Exception as e:
         print(f"Erreur lors de l'appel au modèle : {str(e)}")
         return create_fallback_response(word)
 
 
-def extract_info_manually(text, word):
+def get_word_suggestions(count, focus):
     """
-    Extract information manually from generated text if JSON parsing fails
+    Ask the model for `count` English words or expressions to learn.
+    Raises on API errors so the caller can choose a fallback.
     """
-    try:
-        # Try to extract key information using regex
-        definition_pattern = r'[Dd]efinition[:\s]*([^.\n]+)'
-        translation_pattern = r'[Tt]ranslation[:\s]*([^.\n]+)'
-        example_pattern = r'[Ee]xample[^:]*:[^"]*"([^"]+)"'
-        
-        definition_match = re.search(definition_pattern, text)
-        translation_match = re.search(translation_pattern, text)
-        example_matches = re.findall(example_pattern, text)
-        
-        result = {
-            'word': word,
-            'definition': definition_match.group(1).strip() if definition_match else f"Definition for {word}",
-            'translation': translation_match.group(1).strip() if translation_match else f"Traduction de {word}",
-            'example1': example_matches[0] if len(example_matches) > 0 else f"Example sentence with {word}.",
-            'example2': example_matches[1] if len(example_matches) > 1 else f"Another example with {word}."
-        }
-        
-        return result
-        
-    except Exception as e:
-        print(f"Manual extraction failed: {str(e)}")
-        return create_fallback_response(word)
+    if not client:
+        raise RuntimeError("Clé OpenAI manquante. Veuillez configurer OPENAI_API_KEY.")
+
+    data = _chat_json(
+        "You are a helpful English vocabulary teacher. Always answer with a JSON object only.",
+        f"""Generate exactly {count} English words or short expressions for language learners.
+
+    Focus on: {focus}
+
+    Requirements:
+    - Return a JSON object with a single key "words" containing the list
+    - Format: {{"words": ["word1", "phrase2", "word3", ...]}}
+    - Avoid basic words like: hello, yes, no, please, thank you
+    - Include a mix of single words and short phrases
+    - Make them useful for vocabulary learning
+
+    Example: {{"words": ["serendipity", "break the ice", "procrastinate", "state of the art", "mindset"]}}"""
+    )
+    words = data.get("words", [])
+    return [str(w) for w in words] if isinstance(words, list) else []
+
 
 def create_fallback_response(word):
     """
@@ -92,9 +89,12 @@ def create_fallback_response(word):
         'example2': f"Autre exemple avec '{word}' non disponible."
     }
 
+
+REQUIRED_FIELDS = ['word', 'definition', 'translation', 'example1', 'example2']
+
+
 def validate_word_data(word_data):
     """
     Validate that word data contains all required fields
     """
-    required_fields = ['word', 'definition', 'translation', 'example1', 'example2']
-    return all(field in word_data and word_data[field] for field in required_fields)
+    return isinstance(word_data, dict) and all(word_data.get(field) for field in REQUIRED_FIELDS)

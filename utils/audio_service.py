@@ -88,9 +88,9 @@ def create_content_with_audio(content_text, audio_text, key, lang='en', content_
     
     with col1:
         if content_type == "markdown":
-            st.markdown(content_text.replace('": "', '').replace('",', ''))
+            st.markdown(content_text)
         else:
-            st.write(content_text.replace('": "', '').replace('",', ''))
+            st.write(content_text)
     
     with col2:
         if st.button("🎧", key=f"audio_{key}", help=f"Écouter: {audio_text[:30]}...",

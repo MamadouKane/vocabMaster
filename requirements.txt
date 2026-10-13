@@ -1,9 +1,8 @@
-firebase-admin>=6.9.0
 gtts>=2.5.4
 pandas>=2.3.0
 plotly>=6.1.2
-psycopg2-binary>=2.9.10
 requests>=2.32.4
 streamlit>=1.46.0
 python-dotenv==1.0.0
-huggingface-hub==0.33.2
+openai>=1.40.0
+streamlit-searchbox>=0.1.23

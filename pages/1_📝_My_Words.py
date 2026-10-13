@@ -17,7 +17,7 @@ init_auth_session()
 
 # Check authentication
 if not is_authenticated():
-    st.warning("Vous devez vous connecter pour jouer au quiz.")
+    st.warning("Vous devez vous connecter pour voir vos mots.")
     if st.button("🔑 Se connecter", type="primary"):
         st.switch_page("pages/0_🔐_Login.py")
     st.stop()

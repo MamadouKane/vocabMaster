@@ -1,9 +1,8 @@
 import streamlit as st
-import json
 import re
 from utils.firebase_simple_config import FirebaseSimpleManager
 from utils.firebase_auth import init_auth_session, is_authenticated, current_user
-from utils.ai_service import client, get_definition_and_examples, validate_word_data
+from utils.ai_service import get_word_suggestions, get_definition_and_examples, validate_word_data
 
 # Page configuration
 st.set_page_config(
@@ -19,7 +18,7 @@ init_auth_session()
 if not is_authenticated():
     st.warning("Vous devez vous connecter pour accéder à la page Learn.")
     if st.button("🔑 Se connecter", type="primary"):
-        st.switch_page("pages/0_🔑_Login.py")
+        st.switch_page("pages/0_🔐_Login.py")
     st.stop()
 
 # Show current user and logout
@@ -54,40 +53,6 @@ def clean_word_suggestion(text):
         
     return cleaned
 
-def parse_ai_response(text):
-    """Parse AI response to extract clean word suggestions."""
-    suggestions = []
-    
-    try:
-        # First, try to parse as JSON
-        if text.strip().startswith('[') and text.strip().endswith(']'):
-            parsed = json.loads(text)
-            if isinstance(parsed, list):
-                for item in parsed:
-                    cleaned = clean_word_suggestion(str(item))
-                    if cleaned:
-                        suggestions.append(cleaned)
-                return suggestions
-    except json.JSONDecodeError:
-        pass
-    
-    # Fallback: parse line by line
-    lines = text.split('\n')
-    for line in lines:
-        cleaned = clean_word_suggestion(line)
-        if cleaned:
-            suggestions.append(cleaned)
-    
-    # Also try comma-separated values
-    if ',' in text and len(suggestions) < 3:
-        parts = text.split(',')
-        for part in parts:
-            cleaned = clean_word_suggestion(part)
-            if cleaned:
-                suggestions.append(cleaned)
-    
-    return list(set(suggestions))  # Remove duplicates
-
 def get_existing_words():
     """Get existing words from database safely."""
     try:
@@ -120,37 +85,15 @@ def request_ai_suggestions(count=7, level="Any", context="Any"):
     level_text = level_instructions.get(level, "various English words and expressions")
     context_text = f" related to {context_instructions.get(context, 'general topics')}" if context != "Any" else ""
     
-    prompt = f"""Generate exactly {count} English words or short expressions for language learners.
-    
-    Focus on: {level_text}{context_text}
-    
-    Requirements:
-    - Return ONLY a valid JSON array
-    - Format: ["word1", "phrase2", "word3", ...]
-    - No explanations or extra text
-    - Avoid basic words like: hello, yes, no, please, thank you
-    - Include a mix of single words and short phrases
-    - Make them useful for vocabulary learning
-    
-    Example: ["serendipity", "break the ice", "procrastinate", "state of the art", "mindset"]"""
-    
+    focus = f"{level_text}{context_text}"
+
     try:
-        response = client.chat.completions.create(
-            model="HuggingFaceH4/zephyr-7b-beta",
-            messages=[
-                {"role": "system", "content": "You are a helpful English vocabulary teacher. Always respond with valid JSON arrays only, no other text."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=400,
-            temperature=0.8,
-        )
-        
-        if not response.choices or not response.choices[0].message:
-            return []
-            
-        content = response.choices[0].message.content.strip()
-        suggestions = parse_ai_response(content)
-        
+        suggestions = []
+        for item in get_word_suggestions(count, focus):
+            cleaned = clean_word_suggestion(item)
+            if cleaned and cleaned not in suggestions:
+                suggestions.append(cleaned)
+
         return suggestions[:count]
         
     except Exception as e:
@@ -354,8 +297,8 @@ with col1:
 
 with col2:
     if st.button("📚 Mes mots", use_container_width=True):
-        st.switch_page("pages/1_📚_My_Words.py")
+        st.switch_page("pages/1_📝_My_Words.py")
 
 with col3:
     if st.button("🎯 Quiz", use_container_width=True):
-        st.switch_page("pages/2_🎯_Quiz.py")
+        st.switch_page("pages/2_🎮_Game.py")

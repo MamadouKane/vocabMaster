@@ -4,6 +4,8 @@ import os
 from utils.firebase_simple_config import FirebaseSimpleManager
 from utils.ai_service import get_definition_and_examples
 from utils.audio_service import play_audio_button, create_content_with_audio
+from utils.suggest_service import suggest_words
+from streamlit_searchbox import st_searchbox
 from utils.firebase_auth import init_auth_session, is_authenticated, logout_user, get_current_user, current_user
 import time
 from dotenv import load_dotenv
@@ -208,10 +210,13 @@ def main():
         st.markdown("### ✨ Découvrez un nouveau mot")
         st.markdown("Entrez un mot anglais et obtenez instantanément sa définition, traduction et exemples d'usage")
         
-        word_input = st.text_input("Mot à apprendre", 
-                                   placeholder="Ex: beautiful, adventure, curiosity, serendipity...",
-                                   key="word_input",
-                                   label_visibility="collapsed")
+        # Searchbox with clickable suggestions while typing (helps avoid typos)
+        word_input = st_searchbox(suggest_words,
+                                  placeholder="Ex: beautiful, adventure, curiosity, serendipity...",
+                                  key="word_input",
+                                  default_use_searchterm=True,
+                                  edit_after_submit="option",
+                                  debounce=300) or ""
         
         validate_btn = st.button("🚀 Générer avec l'IA", 
                                  type="primary", 

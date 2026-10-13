@@ -294,9 +294,9 @@ def main():
             
             # Current score
             st.sidebar.markdown(f"### 📊 Score actuel")
-            st.sidebar.markdown(f"**{st.session_state.score}/{current_q + 1}** réponses correctes")
+            st.sidebar.markdown(f"**{st.session_state.score}/{current_q}** réponses correctes")
             if current_q > 0:
-                percentage = (st.session_state.score / (current_q + 1)) * 100
+                percentage = (st.session_state.score / current_q) * 100
                 st.sidebar.markdown(f"**{percentage:.1f}%** de réussite")
         
         # Game completed
@@ -347,7 +347,7 @@ def main():
             
             with col1:
                 if st.button("🔄 Nouvelle Partie", type="primary", use_container_width=True):
-                    if start_new_game():
+                    if start_new_game(st.session_state.game_mode or "translation"):
                         st.rerun()
             
             with col2:

@@ -1,8 +1,7 @@
 import streamlit as st
 import plotly.express as px
-import plotly.graph_objects as go
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime
 from utils.firebase_simple_config import FirebaseSimpleManager
 from utils.firebase_auth import init_auth_session, is_authenticated, get_current_user, logout_user, current_user
 
@@ -57,19 +56,17 @@ def create_progress_chart(monthly_data):
     
     return fig
 
-def create_score_distribution():
-    """Create score distribution chart (placeholder for now)"""
-    # This would be implemented when we have game history data
-    scores = [85, 90, 75, 95, 80, 88, 92, 78, 85, 90]  # Example data
-    
-    fig = go.Figure(data=[go.Histogram(x=scores, nbinsx=10)])
-    fig.update_layout(
-        title="📊 Distribution des Scores",
-        xaxis_title="Score (%)",
-        yaxis_title="Nombre de parties"
-    )
-    
-    return fig
+def get_days_learning(words):
+    """Number of days since the first word was added (at least 1)"""
+    dates = []
+    for word in words:
+        try:
+            dates.append(datetime.fromisoformat(word['created_at']))
+        except (KeyError, TypeError, ValueError):
+            continue
+    if not dates:
+        return 1
+    return max((datetime.now() - min(dates)).days + 1, 1)
 
 def main():
     st.title("📊 Stats - Statistiques d'Apprentissage")
@@ -77,9 +74,10 @@ def main():
     
     try:
         # Get statistics
-        total_words = firebase_manager.get_total_words_count()
+        words = firebase_manager.get_all_words()
+        total_words = len(words)
         game_stats = firebase_manager.get_game_stats()
-        monthly_data = firebase_manager.get_monthly_progress()
+        monthly_data = firebase_manager.get_monthly_progress(words)
         
         # Overview metrics
         st.markdown("### 📈 Vue d'ensemble")
@@ -190,9 +188,9 @@ def main():
             st.markdown("#### 📚 Statistiques de Vocabulaire")
             
             if total_words > 0:
-                # Calculate daily average (assuming first word was added a month ago for calculation)
-                days_learning = 30  # Placeholder - in real implementation, calculate from first word date
-                daily_avg = total_words / days_learning if days_learning > 0 else 0
+                # Daily average since the first word was added
+                days_learning = get_days_learning(words)
+                daily_avg = total_words / days_learning
                 
                 vocab_insights = [
                     f"🎯 Objectif recommandé: 5 nouveaux mots par jour",
